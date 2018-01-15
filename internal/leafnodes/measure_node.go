@@ -1,9 +1,12 @@
 package leafnodes
 
 import (
+	"fmt"
+	"reflect"
+	"time"
+
 	"github.com/onsi/ginkgo/internal/failer"
 	"github.com/onsi/ginkgo/types"
-	"reflect"
 )
 
 type MeasureNode struct {
@@ -15,15 +18,32 @@ type MeasureNode struct {
 	benchmarker *benchmarker
 }
 
-func NewMeasureNode(text string, body interface{}, flag types.FlagType, codeLocation types.CodeLocation, samples int, failer *failer.Failer, componentIndex int) *MeasureNode {
+func NewMeasureNode(text string, body interface{}, flag types.FlagType, codeLocation types.CodeLocation, timeout time.Duration, samples int, failer *failer.Failer, componentIndex int) *MeasureNode {
 	benchmarker := newBenchmarker()
 
-	wrappedBody := func() {
-		reflect.ValueOf(body).Call([]reflect.Value{reflect.ValueOf(benchmarker)})
+	var wrappedBody interface{}
+
+	bodyType := reflect.TypeOf(body)
+	if bodyType.Kind() != reflect.Func {
+		panic(fmt.Sprintf("Expected a function but got something else at %v", codeLocation))
+	}
+
+	switch bodyType.NumIn() {
+	case 1:
+		wrappedBody = func() {
+			fmt.Println(reflect.ValueOf(body))
+			reflect.ValueOf(body).Call([]reflect.Value{reflect.ValueOf(benchmarker)})
+		}
+	case 2:
+		wrappedBody = func(done chan<- interface{}) {
+			reflect.ValueOf(body).Call([]reflect.Value{reflect.ValueOf(benchmarker), reflect.ValueOf(done)})
+		}
+	default:
+		panic(fmt.Sprintf("Wrong number of arguments to function at %v", codeLocation))
 	}
 
 	return &MeasureNode{
-		runner: newRunner(wrappedBody, codeLocation, 0, failer, types.SpecComponentTypeMeasure, componentIndex),
+		runner: newRunner(wrappedBody, codeLocation, timeout, failer, types.SpecComponentTypeMeasure, componentIndex),
 
 		text:        text,
 		flag:        flag,
