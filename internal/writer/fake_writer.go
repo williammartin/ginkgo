@@ -34,3 +34,11 @@ func (writer *FakeGinkgoWriter) Bytes() []byte {
 func (writer *FakeGinkgoWriter) Write(data []byte) (n int, err error) {
 	return 0, nil
 }
+
+func (writer *FakeGinkgoWriter) Mark() {
+	writer.EventStream = append(writer.EventStream, "MARK")
+}
+
+func (writer *FakeGinkgoWriter) Rewind() {
+	writer.EventStream = append(writer.EventStream, "REWIND")
+}

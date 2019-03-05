@@ -125,6 +125,7 @@ func (runner *SpecRunner) runBeforeSuite() bool {
 		runner.writer.DumpOut()
 	}
 	runner.reportBeforeSuite(runner.beforeSuiteNode.Summary())
+	runner.writer.Mark()
 	return passed
 }
 
@@ -292,7 +293,7 @@ func (runner *SpecRunner) reportAfterSuite(summary *types.SetupSummary) {
 }
 
 func (runner *SpecRunner) reportSpecWillRun(summary *types.SpecSummary) {
-	runner.writer.Truncate()
+	runner.writer.Rewind()
 
 	for _, reporter := range runner.reporters {
 		reporter.SpecWillRun(summary)

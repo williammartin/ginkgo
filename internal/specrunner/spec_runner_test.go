@@ -714,15 +714,15 @@ var _ = Describe("Spec Runner", func() {
 			runner.Run()
 		})
 
-		It("should truncate between tests, but only dump if a test fails", func() {
+		It("should rewind between tests, but only dump if a test fails", func() {
 			Ω(writer.EventStream).Should(Equal([]string{
-				"TRUNCATE",
+				"REWIND",
 				"R1.WillRun",
 				"R2.WillRun",
 				"A",
 				"R2.DidComplete",
 				"R1.DidComplete",
-				"TRUNCATE",
+				"REWIND",
 				"R1.WillRun",
 				"R2.WillRun",
 				"B",
@@ -730,7 +730,7 @@ var _ = Describe("Spec Runner", func() {
 				"R2.DidComplete",
 				"DUMP",
 				"R1.DidComplete",
-				"TRUNCATE",
+				"REWIND",
 				"R1.WillRun",
 				"R2.WillRun",
 				"C",

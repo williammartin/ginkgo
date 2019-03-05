@@ -13,6 +13,8 @@ type WriterInterface interface {
 	DumpOut()
 	DumpOutWithHeader(header string)
 	Bytes() []byte
+	Mark()
+	Rewind()
 }
 
 type Writer struct {
@@ -21,6 +23,7 @@ type Writer struct {
 	lock       *sync.Mutex
 	stream     bool
 	redirector io.Writer
+	mark       int
 }
 
 func New(outWriter io.Writer) *Writer {
@@ -34,6 +37,20 @@ func New(outWriter io.Writer) *Writer {
 
 func (w *Writer) AndRedirectTo(writer io.Writer) {
 	w.redirector = writer
+}
+
+func (w *Writer) Mark() {
+	w.lock.Lock()
+	defer w.lock.Unlock()
+
+	w.mark = w.buffer.Len()
+}
+
+func (w *Writer) Rewind() {
+	w.lock.Lock()
+	defer w.lock.Unlock()
+
+	w.buffer.Truncate(w.mark)
 }
 
 func (w *Writer) SetStream(stream bool) {
